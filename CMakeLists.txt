@@ -52,8 +52,16 @@ SET(TEST_DIR                                                 ${CMAKE_CURRENT_LIS
 SET(INCLUDE_DIR_NCOM                                         ${INCLUDE_DIR}/ncom)
 SET(INCLUDE_DIR_TUC                                          ${INCLUDE_DIR}/tuc)
 
+IF (DEFINED ENV{PARTENSOR_DEV_ENV})
+	SET(DEVEL_BUILD $ENV{PARTENSOR_DEV_ENV} CACHE STRING "Partensor development" FORCE)
+ELSEIF (DEFINED PARTENSOR_DEV_OPT)
+	SET(DEVEL_BUILD $ENV{PARTENSOR_DEV_OPT} CACHE STRING "Partensor development" FORCE)
+ENDIF()
+
+
 IF(NOT DEFINED DEVEL_BUILD)
   SET(INCLUDE_DIR_NCOM ${INCLUDE_DIR})
+  SET(INCLUDE_DIR_TUC ${INCLUDE_DIR})
 ELSE(NOT DEFINED DEVEL_BUILD)
   SET(TEST_DIR         ${TEST_DIR}/ncom)
 ENDIF(NOT DEFINED DEVEL_BUILD)
@@ -213,9 +221,10 @@ MESSAGE(STATUS "[ PARTENSOR ] Config MPI END...")
 ########################################################################################################################
 
 INCLUDE_DIRECTORIES(${INCLUDE_DIR_NCOM})
+INCLUDE_DIRECTORIES(${INCLUDE_DIR_TUC})
 INCLUDE_DIRECTORIES(${BOOST_ROOT}/include)
 INCLUDE_DIRECTORIES(${EIGEN_ROOT_DIR})
-INCLUDE_DIRECTORIES(${MPI_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${MPI_ROOT_DIR}/include)
 INCLUDE_DIRECTORIES(${SPDLOG_ROOT_DIR}/include)
 
 ########################################################################################################################
@@ -258,7 +267,8 @@ IF(EXISTS "${TEST_DIR}" AND DEFINED DEVEL_BUILD)
   #   ADD_SUBDIRECTORY(test/tuc/ReadWrite)
   #   ADD_SUBDIRECTORY(test/tuc/KhatriRaoProduct)
   # ENDIF()
-
+  # ADD_SUBDIRECTORY(test/tuc/MPIGTC)
+  # ADD_SUBDIRECTORY(test/tuc/GTC)
   ### DOXYGEN
   ADD_SUBDIRECTORY(documentation)
   ADD_SUBDIRECTORY(documentation/doxygen/examples)
