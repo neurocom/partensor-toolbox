@@ -5,6 +5,30 @@ The Partensor library provides efficient algorithms for processing tensors of ve
 
 More information about the library can be found in our [site](https://www.partensor.com/).
 
+## Funding
+
+The project is funded by the European Regional Development Fund under the Operational Program "Competitiveness – Entrepreneurship – Innovation" (NSRF 2014-2020). It is implemented under the action "Research-Develop-Innovate", and running under the Special Management and Implementation Authority for Research, Technological Development and Innovation Actions by the Ministry of Education, Research and Religious Affairs (MIA-RTDI).
+
+The title of this project is "Parallel algorithms and implementations for large scale tensors", with code T1EDK - 03360.
+
+## Contributors
+<ul>
+    <li>Technical University of Crete (TUC)</li>
+        <ul>
+            <li>Liavas P. Athanasios</li>
+            <li>Karakasis Paris</li>
+            <li>Kolomvakis Christos</li>
+            <li>Papagiannakos John</li>
+            <li>Siaminou Nina</li>
+        </ul>
+    <li>Neurocom SA</li>
+        <ul>
+            <li>Tsalidis Christos</li>
+            <li>Lourakis Georgios</li>
+            <li>Lykoudis George</li>
+        </ul>
+</ul>
+
 ## Getting Started
 In order to use **PARTENSOR** library, first clone this repository and then follow the instructions.
 

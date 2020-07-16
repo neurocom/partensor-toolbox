@@ -1,11 +1,17 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 /**
- * @date      20/03/2019
- * @author    Christos Tsalidis
- * @author    Yiorgos Lourakis
- * @author    George Lykoudis
- * @copyright 2019 Neurocom All Rights Reserved.
- */
+* @date      20/03/2019
+* @author    Technical University of Crete team:
+*            Athanasios P. Liavas
+*            Paris Karakasis
+*            Christos Kolomvakis
+*            John Papagiannakos
+*            Siaminou Nina
+* @author    Neurocom SA team:
+*            Christos Tsalidis
+*            Georgios Lourakis
+*            George Lykoudis
+*/
 #endif  // DOXYGEN_SHOULD_SKIP_THIS
 /********************************************************************/
 /**
