@@ -35,7 +35,7 @@ In order to use **PARTENSOR** library, first clone this repository and then foll
 A detailed manual can be found in the documentation directory. From there open *index.html* file in the browser of your preference. Otherwise, a pdf of the manual can be found and downloaded in [Repository](https://www.partensor.com/en/repository) page of our site.
 Both the html document and pdf describe in detail the project's **API**. Moreover, it includes many useful examples for the supporting functionality.
 
-## Requirments
+## Requirements
 As mentioned in the manual, some libraries are necessary for the library to work. After downloading them, the user can then test or use the toolbox in other projects. Also, the user can compile and run the examples that exist in *test* directory.
 
 #### NOTE
