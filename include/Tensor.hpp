@@ -42,6 +42,19 @@ namespace partensor {
   using Matrix = Eigen::Matrix<DefaultDataType, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>;
 
   /**
+   * Alias for @c Eigen Matrix with rows and columns computed 
+   * dynamically and the data are long int type. Also the matrix 
+   * is stored with column major.
+   */
+  using LongMatrix = Eigen::Matrix<long int, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>;
+
+  /**
+   * Alias for @c Eigen Sparse Matrix with rows and columns computed 
+   * dynamically. Also the matrix is stored with column major.
+   */
+	using SparseMatrix = Eigen::SparseMatrix<DefaultDataType, Eigen::ColMajor, long int>;
+
+  /**
    * Alias for @c Eigen Tensor with data type equal to @c DefaultDataType
    * and tensor order equal to template parameter @c _TnsSize.
    * 
@@ -77,7 +90,7 @@ namespace partensor {
 
     static constexpr std::size_t TnsSize = _TnsSize;
   };
-
+  
   template <typename Tensor>
   using MatrixArray = typename TensorTraits<Tensor>::MatrixArray;
 
@@ -86,6 +99,40 @@ namespace partensor {
 
   template <typename Tensor>
   using DoubleArray = typename TensorTraits<Tensor>::DoubleArray;
+
+  /**
+   * Initialization of a templated struct with information about 
+   * an @c Sparse @c Eigen.
+   * 
+   * @tparam @c Sparse @c Eigen Tensor Type.
+   */
+  template <typename SparseTensor>
+  struct SparseTensorTraits;
+
+  template <std::size_t _TnsSize>
+  using SparseTensor = std::array<SparseMatrix, _TnsSize>;
+  
+  /**
+   * Specialization of templated struct @c SparseMatrixTraits.
+   * 
+   * @tparam _TnsSize  Tensor Order.
+   */
+  template <std::size_t _TnsSize>
+  struct SparseTensorTraits<SparseTensor<_TnsSize>> // std::array<SparseMatrix, _TnsSize>
+  {
+    using DataType          = DefaultDataType;
+    using MatrixType        = partensor::Matrix;
+    using SparseMatrixType  = partensor::SparseMatrix;
+    using LongMatrixType    = partensor::LongMatrix;
+    using Dimensions        = std::array<int,_TnsSize>;
+    using Constraints       = std::array<Constraint,_TnsSize>;                      /**< Stl array of size TnsSize and containing Constraint type. */
+    using SparseTensor      = std::array<SparseMatrix, _TnsSize>;
+    using MatrixArray       = std::array<MatrixType,_TnsSize>;                      /**< Stl array of size TnsSize and containing MatrixType type. */
+    using DoubleArray       = std::array<double,_TnsSize>;                          /**< Stl array of size TnsSize and containing double type.     */
+    using IntArray          = std::array<int,_TnsSize>;                             /**< Stl array of size TnsSize and containing int type. */
+
+    static constexpr std::size_t TnsSize = _TnsSize;
+  };
 
   /**
    * Initialization of a templated struct. It is being used to hold

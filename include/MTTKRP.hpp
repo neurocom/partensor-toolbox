@@ -25,6 +25,7 @@
 
 #include "PARTENSOR_basic.hpp"
 #include "PartialKhatriRao.hpp"
+#include <omp.h>
 
 // #define EIGEN_DONT_PARALLELIZE
 // #define NUM_SOCKETS                1
@@ -223,7 +224,221 @@ namespace partensor {
       #endif
     }
 
+    // trasposed_v
+    // Serial (using std::array for tns_dimensions)
+    template<std::size_t _TnsSize>
+    void SparseMTTKRP(const std::array<int, _TnsSize>    &tns_dimensions,
+                      const SparseMatrix                 &sparse_tns,
+                      const std::array<Matrix, _TnsSize> &factors,
+                      const int                           rank,
+                      const std::array<int, _TnsSize-1>    &offsets,
+                      const int                           last_mode,
+                      const int                           cur_mode,
+                      Matrix                             &MTTKRP)
+    {
+      Matrix temp_R_1(rank, 1);
+      Matrix MTTKRP_col(rank, 1);
+
+      for (long int i = 0; i < sparse_tns.outerSize(); ++i)
+      {
+        MTTKRP_col = Matrix::Zero(rank, 1);
+        for (typename SparseMatrix::InnerIterator it(sparse_tns, i); it; ++it)
+        {
+          temp_R_1 = Matrix::Ones(rank, 1);
+          int row;
+          // Select rows of each factor an compute the respective row of the Khatri-Rao product.
+          for (int mode_i = last_mode, kr_counter = static_cast<int>(_TnsSize) - 2; mode_i >= 0 && kr_counter >= 0; mode_i--)
+          {
+
+            if (mode_i == cur_mode)
+            {
+              continue;
+            }
+            row      = ((it.row()) / offsets[kr_counter]) % (tns_dimensions[mode_i]);
+            temp_R_1 = temp_R_1.cwiseProduct(factors[mode_i].col(row));
+            kr_counter--;
+          }
+          // Subtract from the previous row the respective row of W, according to relation (9).
+          // MTTKRP.row(it.col()) -= it.value() * temp_R_1;
+          MTTKRP_col -= it.value() * temp_R_1;
+        }
+        MTTKRP.col(i) = MTTKRP_col;
+      }
+    }
+
+    // Parallel OpenMP (using std::array for tns_dimensions)
+    template<std::size_t _TnsSize>
+    void SparseMTTKRP_omp(const std::array<int, _TnsSize>    &tns_dimensions,
+                          const SparseMatrix                 &sparse_tns,
+                          const std::array<Matrix, _TnsSize> &factors,
+                          const int                           rank,
+                          const std::array<int, _TnsSize-1>    &offsets,
+                          const int                           last_mode,
+                          const int                           cur_mode,
+                          Matrix                             &MTTKRP)
+    {
+      Matrix temp_R_1(rank, 1);
+      Matrix MTTKRP_col(rank, 1);
+
+      #pragma omp for schedule(dynamic) nowait
+      for (long int i = 0; i < sparse_tns.outerSize(); ++i)
+      {
+        MTTKRP_col = Matrix::Zero(rank, 1);
+        for (typename SparseMatrix::InnerIterator it(sparse_tns, i); it; ++it)
+        {
+          temp_R_1 = Matrix::Ones(rank, 1);
+          long int row;
+          // Select rows of each factor an compute the respective row of the Khatri-Rao product.
+          for (int mode_i = last_mode, kr_counter = static_cast<int>(_TnsSize) - 2; mode_i >= 0 && kr_counter >= 0; mode_i--)
+          {
+
+            if (mode_i == cur_mode)
+            {
+              continue;
+            }
+            row      = ((it.row()) / offsets[kr_counter]) % (tns_dimensions[mode_i]);
+            temp_R_1 = temp_R_1.cwiseProduct(factors[mode_i].col(row));
+            kr_counter--;
+          }
+          // Subtract from the previous row the respective row of W, according to relation (9).
+          // MTTKRP.row(it.col()) -= it.value() * temp_R_1;
+          MTTKRP_col -= it.value() * temp_R_1;
+        }
+        MTTKRP.col(i) = MTTKRP_col;
+      }
+    }
+    
+    // Parallel (using std::vector for tns_dimensions)
+    template<std::size_t _TnsSize>
+    void SparseMTTKRP(const std::vector<std::vector<int>> &tns_dimensions,
+                      const std::array<int, _TnsSize>     &fiber_rank,
+                      const SparseMatrix                  &sparse_tns,
+                      const std::array<Matrix, _TnsSize>  &factors,
+                      const int                            rank,
+                      const std::array<int, _TnsSize-1>   &offsets,
+                      const int                            last_mode,
+                      const int                            cur_mode,
+                      Matrix                              &MTTKRP)
+    {
+      Matrix temp_R_1(rank, 1);
+      Matrix MTTKRP_col(rank, 1);
+
+      for (long long int i = 0; i < sparse_tns.outerSize(); ++i)
+      {
+        MTTKRP_col.setZero();
+        for (typename SparseMatrix::InnerIterator it(sparse_tns, i); it; ++it)
+        {
+          temp_R_1 = Matrix::Ones(rank, 1);
+          long long int row;
+          // Select rows of each factor an compute the respective row of the Khatri-Rao product.
+          for (int mode_i = last_mode, kr_counter = static_cast<int>(_TnsSize) - 2; mode_i >= 0 && kr_counter >= 0; mode_i--)
+          {
+            if (mode_i == cur_mode)
+            {
+              continue;
+            }
+            row      = ((it.row()) / offsets[kr_counter]) % (tns_dimensions[mode_i][fiber_rank[mode_i]]);
+            
+            temp_R_1 = temp_R_1.cwiseProduct(factors[mode_i].col(row));
+            kr_counter--;
+          }
+          // Subtract from the previous row the respective row of W, according to relation (9).
+          MTTKRP_col -= it.value() * temp_R_1;
+        }
+        MTTKRP.col(i) = MTTKRP_col;
+      }
+    }
+
   } // end namespace v1
+
+  namespace v2 // std_v 
+  {
+    // Serial (using std::array for tns_dimensions)
+    template<std::size_t _TnsSize>
+    void SparseMTTKRP(const std::array<int, _TnsSize>    &tns_dimensions,
+                      const SparseMatrix                 &sparse_tns,
+                      const std::array<Matrix, _TnsSize> &factors,
+                      const int                           rank,
+                      const std::array<int, _TnsSize>    &offsets,
+                      const int                           last_mode,
+                      const int                           cur_mode,
+                      Matrix                             &MTTKRP)
+    {
+      Matrix temp_1_R(1, rank);
+      Matrix MTTKRP_row(1, rank);
+
+      MTTKRP.setZero();
+
+      for (long int i = 0; i < sparse_tns.outerSize(); ++i)
+      {
+        MTTKRP_row = Matrix::Zero(1, rank);
+        for (typename SparseMatrix::InnerIterator it(sparse_tns, i); it; ++it)
+        {
+          temp_1_R = Matrix::Ones(1, rank);
+          int row;
+          // Select rows of each factor an compute the respective row of the Khatri-Rao product.
+          for (int mode_i = last_mode, kr_counter = static_cast<int>(_TnsSize) - 2; mode_i >= 0 && kr_counter >= 0; mode_i--)
+          {
+
+            if (mode_i == cur_mode)
+            {
+              continue;
+            }
+            row      = ((it.row()) / offsets[kr_counter]) % (tns_dimensions[mode_i]);
+            temp_1_R = temp_1_R.cwiseProduct(factors[mode_i].row(row));
+            kr_counter--;
+          }
+          // Subtract from the previous row the respective row of W, according to relation (9).
+          MTTKRP_row -= it.value() * temp_1_R;
+        }
+        MTTKRP.row(i) = MTTKRP_row;
+      }
+    }
+
+    // Parallel (using std::vector for tns_dimensions)
+    template<std::size_t _TnsSize>
+    void SparseMTTKRP(const std::vector<int>             &tns_dimensions,
+                      const std::array<int, _TnsSize>    &fiber_rank,
+                      const SparseMatrix                 &sparse_tns,
+                      const std::array<Matrix, _TnsSize> &factors,
+                      const int                           rank,
+                      const std::array<int, _TnsSize>    &offsets,
+                      const int                           last_mode,
+                      const int                           cur_mode,
+                      Matrix                             &MTTKRP)
+    {
+      Matrix temp_1_R(1, rank);
+      Matrix MTTKRP_row(1, rank);
+
+      MTTKRP.setZero();
+
+      for (long int i = 0; i < sparse_tns.outerSize(); ++i)
+      {
+        MTTKRP_row = Matrix::Zero(1, rank);
+        for (typename SparseMatrix::InnerIterator it(sparse_tns, i); it; ++it)
+        {
+          temp_1_R = Matrix::Ones(1, rank);
+          int row;
+          // Select rows of each factor an compute the respective row of the Khatri-Rao product.
+          for (int mode_i = last_mode, kr_counter = static_cast<int>(_TnsSize) - 2; mode_i >= 0 && kr_counter >= 0; mode_i--)
+          {
+
+            if (mode_i == cur_mode)
+            {
+              continue;
+            }
+            row      = ((it.row()) / offsets[kr_counter]) % (tns_dimensions[fiber_rank[mode_i]]);
+            temp_1_R = temp_1_R.cwiseProduct(factors[mode_i].row(row));
+            kr_counter--;
+          }
+          // Subtract from the previous row the respective row of W, according to relation (9).
+          MTTKRP_row -= it.value() * temp_1_R;
+        }
+        MTTKRP.row(i) = MTTKRP_row;
+      }
+    }
+
+  } // end namespace v2 
 
 } // end namespace partensor
 

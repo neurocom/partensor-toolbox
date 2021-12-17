@@ -48,7 +48,7 @@ public:
     return std::false_type{};
   }
 
-  static constexpr std::false_type __allow_opencl()
+  static constexpr std::false_type __allow_cuda()
   {
     return std::false_type{};
   }
@@ -83,7 +83,7 @@ public:
     return std::true_type{};
   }
 
-  static constexpr std::false_type __allow_opencl()
+  static constexpr std::false_type __allow_cuda()
   {
     return std::false_type{};
   }
@@ -118,7 +118,7 @@ public:
     return std::true_type{};
   }
 
-  static constexpr std::false_type __allow_opencl()
+  static constexpr std::false_type __allow_cuda()
   {
     return std::false_type{};
   }
@@ -151,7 +151,7 @@ public:
     return std::false_type{};
   }
 
-  static constexpr std::false_type __allow_opencl()
+  static constexpr std::false_type __allow_cuda()
   {
     return std::false_type{};
   }
@@ -167,7 +167,7 @@ public:
   }
 };
 
-class opencl_policy
+class cuda_policy
 {
 public:
   // For internal use only
@@ -186,7 +186,7 @@ public:
     return std::false_type{};
   }
 
-  static constexpr std::true_type __allow_opencl()
+  static constexpr std::true_type __allow_cuda()
   {
     return std::true_type{};
   }
@@ -221,7 +221,7 @@ public:
     return std::false_type{};
   }
 
-  static constexpr std::false_type __allow_opencl()
+  static constexpr std::false_type __allow_cuda()
   {
     return std::false_type{};
   }
@@ -256,7 +256,7 @@ public:
     return std::false_type{};
   }
 
-  static constexpr std::false_type __allow_opencl()
+  static constexpr std::false_type __allow_cuda()
   {
     return std::false_type{};
   }
@@ -276,7 +276,7 @@ constexpr sequenced_policy            seq{};
 constexpr parallel_policy             par{};
 constexpr parallel_unsequenced_policy par_unseq{};
 constexpr unsequenced_policy          unseq{};
-constexpr opencl_policy               ocl{};
+constexpr cuda_policy                 cuda{};
 constexpr openmpi_policy              mpi{};
 constexpr openmp_policy               omp{};
 
@@ -301,7 +301,7 @@ struct is_execution_policy<unsequenced_policy> : std::true_type
 { };
 
 template <>
-struct is_execution_policy<opencl_policy> : std::true_type
+struct is_execution_policy<cuda_policy> : std::true_type
 { };
 
 template <>

@@ -35,6 +35,8 @@
 #include "Timers.hpp"
 #include "DimTrees.hpp"
 #include "Cpd.hpp"
+#include "Gtc.hpp"
+#include "GtcStochastic.hpp"
 #include "CpdDimTree.hpp"
 #include "ParallelWrapper.hpp"
 

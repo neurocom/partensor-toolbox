@@ -43,6 +43,18 @@ SET(TEST_SRC_FILE_NAMES QuickStart_example
                         cpd_dimtrees_mpi_full##
                         cpd_dimtrees_full_file
                         cpd_dimtrees_mpi_full_file##
+                        gtc
+                        gtc_mpi
+                        gtc_omp##
+                        gtc_file
+                        gtc_mpi_file
+                        gtc_omp_file##
+                        gtc_factorsinit
+                        gtc_mpi_factorsinit
+                        gtc_omp_factorsinit##
+                        gtc_stochastic
+                        gtc_stochastic_mpi
+                        gtc_stochastic_omp##
                         cwiseprod
                         khatrirao
                         kronecker
@@ -55,7 +67,8 @@ SET(TEST_SRC_FILE_NAMES QuickStart_example
                         factors_gen
                         make_tensor
                         write
-                        read)
+                        read
+                        )
 
 ########################################################################################################################
 ###      SET Variables

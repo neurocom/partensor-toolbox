@@ -114,7 +114,8 @@ SET(CMAKE_CXX_EXTENSIONS OFF)
 
 SET(CMAKE_CXX_FLAGS              "${CMAKE_CXX_FLAGS} -fopenmp -Wall -Wextra -std=c++17")
 SET(CMAKE_CXX_FLAGS              "${CMAKE_CXX_FLAGS} -Wno-ignored-attributes -Wno-deprecated-copy")
-SET(CMAKE_CXX_FLAGS_RELEASE      "-O3")
+# SET(CMAKE_CXX_FLAGS_RELEASE      "-O3")
+set(CMAKE_CXX_FLAGS_RELEASE      "-O3 -funroll-loops -DEIGEN_NO_DEBUG -march=native -mtune=native ")
 SET(CMAKE_CXX_FLAGS_DEBUG        "-g")
 
 MESSAGE(STATUS "[ PARTENSOR ] Build type: ${CMAKE_BUILD_TYPE}")

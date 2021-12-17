@@ -12,4 +12,6 @@
 #define USE_OPENMP  0
 #endif /* !defined (USE_OPENMP) */
 
-#define USE_CL   0
+#if !defined (USE_CUDA)
+#define USE_CUDA  0
+#endif /* !defined (USE_CUDA) */

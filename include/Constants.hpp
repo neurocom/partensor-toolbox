@@ -51,7 +51,9 @@ namespace partensor {
 		nonnegativity = 1, /**< nonnegativity */
 		orthogonality = 2, /**< orthogonality */
 		sparsity      = 3, /**< sparsity */
-		constant      = 4  /**< constant */
+		constant      = 4,  /**< constant */
+		symmetric_nonnegativity = 5, /**< symmetric_nonnegativity */
+		symmetric = 6 /**< symmetric */
 	};
 
 	/**

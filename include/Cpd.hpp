@@ -1,5 +1,5 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/**
+/** 5432
 * @date      07/10/2019
 * @author    Technical University of Crete team:
 *            Athanasios P. Liavas
@@ -864,6 +864,11 @@ namespace partensor
 #include "CpdOpenMP.hpp"
 #endif /* USE_OPENMP */
 
+#if USE_CUDA
+
+#include "CUDA/CpdCUDA.hpp"
+#endif /* USE_CUDA */
+
 namespace partensor
 {
   /**
@@ -904,6 +909,10 @@ namespace partensor
     else if constexpr (std::is_same_v<ExPolicy,execution::openmp_policy>)
     {
       return internal::CPD<Tensor_,execution::openmp_policy>()(tnsX,R);
+    }
+    else if constexpr (std::is_same_v<ExPolicy, execution::cuda_policy>)
+    {
+      return internal::CPD<Tensor_, execution::cuda_policy>()(tnsX,R);
     }
     else
       return internal::CPD<Tensor_>()(tnsX,R);
@@ -971,6 +980,10 @@ namespace partensor
     else if constexpr (std::is_same_v<ExPolicy,execution::openmp_policy>)
     {
       return internal::CPD<Tensor_,execution::openmp_policy>()(tnsX,R,options);
+    }
+    else if constexpr (std::is_same_v<ExPolicy, execution::cuda_policy>)
+    {
+      return internal::CPD<Tensor_,execution::cuda_policy>()(tnsX,R,options);
     }
     else
       return internal::CPD<Tensor_>()(tnsX,R,options);
@@ -1042,6 +1055,10 @@ namespace partensor
     else if constexpr (std::is_same_v<ExPolicy,execution::openmp_policy>)
     {
       return internal::CPD<Tensor_,execution::openmp_policy>()(tnsX,R,factorsInit);
+    }
+    else if constexpr (std::is_same_v<ExPolicy,execution::cuda_policy>)
+    {
+      return internal::CPD<Tensor_,execution::cuda_policy>()(tnsX,R,factorsInit);
     }
     else
       return internal::CPD<Tensor_>()(tnsX,R,factorsInit);
@@ -1118,6 +1135,10 @@ namespace partensor
     {
       return internal::CPD<Tensor_,execution::openmp_policy>()(tnsX,R,options,factorsInit);
     }
+    else if constexpr (std::is_same_v<ExPolicy,execution::cuda_policy>)
+    {
+      return internal::CPD<Tensor_,execution::cuda_policy>()(tnsX,R,options,factorsInit);
+    }
     else
       return internal::CPD<Tensor_>()(tnsX,R,options,factorsInit);
   }
@@ -1192,6 +1213,10 @@ namespace partensor
     else if constexpr (std::is_same_v<ExPolicy,execution::openmp_policy>)
     {
       return internal::CPD<Tensor_,execution::openmp_policy>()(tnsDims,R,path);
+    }
+    else if constexpr (std::is_same_v<ExPolicy, execution::cuda_policy>)
+    {
+      return internal::CPD<Tensor_, execution::cuda_policy>()(tnsDims,R,path);
     }
     else
       return internal::CPD<Tensor_>()(tnsDims,R,path);
@@ -1268,6 +1293,10 @@ namespace partensor
     {
       return internal::CPD<Tensor_,execution::openmp_policy>()(tnsDims,R,path,options);
     }
+    else if constexpr (std::is_same_v<ExPolicy,execution::cuda_policy>)
+    {
+      return internal::CPD<Tensor_,execution::cuda_policy>()(tnsDims,R,path,options);
+    }    
     else
       return internal::CPD<Tensor_>()(tnsDims,R,path,options);
   }
@@ -1346,6 +1375,10 @@ namespace partensor
     {
       return internal::CPD<Tensor_,execution::openmp_policy>()(tnsDims,R,paths);
     }
+    else if constexpr (std::is_same_v<ExPolicy,execution::cuda_policy>)
+    {
+      return internal::CPD<Tensor_,execution::cuda_policy>()(tnsDims,R,paths);
+    }    
     else
       return internal::CPD<Tensor_>()(tnsDims,R,paths);
   }
@@ -1425,6 +1458,10 @@ namespace partensor
     {
       return internal::CPD<Tensor_,execution::openmp_policy>()(tnsDims,R,paths,options);
     }
+    else if constexpr (std::is_same_v<ExPolicy,execution::cuda_policy>)
+    {
+      return internal::CPD<Tensor_,execution::cuda_policy>()(tnsDims,R,paths,options);
+    }    
     else
       return internal::CPD<Tensor_>()(tnsDims,R,paths,options);
   }
@@ -1509,6 +1546,10 @@ namespace partensor
     {
       return internal::CPD<Tensor_,execution::openmp_policy>()(tnsDims,R,true_paths,init_paths,options);
     }
+    else if constexpr (std::is_same_v<ExPolicy,execution::cuda_policy>)
+    {
+      return internal::CPD<Tensor_,execution::cuda_policy>()(tnsDims,R,true_paths,init_paths,options);
+    }    
     else
       return internal::CPD<Tensor_>()(tnsDims,R,true_paths,init_paths,options);
   }

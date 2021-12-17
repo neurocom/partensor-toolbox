@@ -88,7 +88,7 @@ namespace partensor
 	 */ 
 	template<typename Dimensions>
 	auto matrixToTensor( Matrix     const &mtx, 
-						 Dimensions const &tnsDims )
+						 Dimensions const tnsDims )
 	{
 	  	static constexpr std::size_t TnsSize = tnsDims.size();
 		using tensormap = typename Eigen::TensorMap<Eigen::Tensor<const DefaultDataType,TnsSize>>;
@@ -318,6 +318,482 @@ namespace partensor
 		else {
 			for (int i=0; i<dim0; i++) {
 				tnsX(i,i,i,i,i,i,i,i) = 1;
+			}
+		}
+	}
+
+	/* Parallel Version of ReserveSparseTensor */
+	template <std::size_t _TnsSize>
+	void ReserveSparseTensor(std::array<SparseMatrix, _TnsSize>       &layer_tns_sparse,
+							 std::vector<std::vector<int>>      const &local_tns_dimensions,
+							 std::array<int,_TnsSize>           const &fiber_rank,
+							 int                                const  grid_size,
+							 long int                           const  nnz)
+	{
+		for (std::size_t i = 0; i < _TnsSize; i++)
+		{
+			long int col = 1;
+			for (std::size_t j = 0; j < _TnsSize; j++)
+			{
+				if (j == i)
+					continue;
+
+				col = col * local_tns_dimensions[j][fiber_rank[j]];
+			}
+			layer_tns_sparse[i].resize(col, local_tns_dimensions[i][fiber_rank[i]]);
+
+			layer_tns_sparse[i].reserve((long int)(nnz / grid_size) + 1);
+		}
+  	}
+
+	/* Serial Version of ReserveSparseTensor */
+	template<std::size_t _TnsSize>
+	void ReserveSparseTensor(std::array<SparseMatrix, _TnsSize>       &tns_sparse,
+							 std::array<int, _TnsSize>          const &tns_dimensions,
+							 const long int                             nnz)
+	{
+		for (std::size_t i = 0; i < _TnsSize; i++)
+		{
+			long int col = 1;
+			for (std::size_t j = 0; j < _TnsSize; j++)
+			{
+				if (j == i)
+					continue;
+
+				col = col * tns_dimensions[j];
+			}
+
+			tns_sparse[i].resize(col, tns_dimensions[i]);
+			tns_sparse[i].reserve(nnz);
+		}
+	}
+
+	// Assign nonzeros to the respective layer_tns_sparse subtensor.
+	template <std::size_t _TnsSize>
+	void FillSparseTensor(std::array<SparseMatrix, _TnsSize>       &tns_sparse,
+						  long int                           const  nnz,
+						  Matrix                             const &Ratings_Base_T,
+						  std::array<int, _TnsSize>          const &tns_dimensions)
+	{
+		LongMatrix matr_mapping(static_cast<int>(_TnsSize), static_cast<int>(_TnsSize));
+		for (int i = 0; i < static_cast<int>(_TnsSize); i++)
+		{
+			for (int j = 0, first = 1, prev = 0; j < static_cast<int>(_TnsSize); j++)
+			{
+				if (j == i)
+				{
+					matr_mapping(i, j) = 0;
+					continue;
+				}
+				if (first == 1)
+				{
+					matr_mapping(i, j) = 1;
+					first = 0;
+					prev = j;
+				}
+				else
+				{
+					matr_mapping(i, j) = matr_mapping(i, prev) * tns_dimensions[prev];
+					prev = j;
+				}
+			}
+		}
+
+		LongMatrix tuple(1, _TnsSize);
+
+		for (long int nnz_k = 0; nnz_k < nnz; nnz_k++)
+		{
+			for (int column_idx = 0; column_idx < static_cast<int>(_TnsSize); column_idx++)
+			{
+				tuple(0, column_idx) = static_cast<long int>(Ratings_Base_T(column_idx, nnz_k));
+			}
+
+			for (int mode_i = 0; mode_i < static_cast<int>(_TnsSize); mode_i++)
+			{
+				long int linear_col = ((matr_mapping.row(mode_i)).cwiseProduct(tuple)).sum();
+				long int row        = tuple(0, mode_i);
+
+				if (tns_sparse[mode_i].outerSize() < row || tns_sparse[mode_i].innerSize() < linear_col)
+				{
+					std::cerr << "error!" << tns_sparse[mode_i].outerSize() << " " << row << " " << tns_sparse[mode_i].innerSize() << " " << linear_col << std::endl;
+				}
+
+				if (tns_sparse[mode_i].coeff(linear_col, row) == 0)
+				{
+					// Using insert to fill sparse matrix
+					tns_sparse[mode_i].insert(linear_col, row) = Ratings_Base_T(_TnsSize, nnz_k);
+				}
+			}
+				
+		}
+	}
+
+	template<std::size_t _TnsSize>
+	void FillSparseMatricization(std::array<SparseMatrix, _TnsSize> &tns_sparse,
+								 const long int                      nnz,
+								 Matrix                             &Ratings_Base_T,
+								 std::array<int, _TnsSize>    const &tns_dimensions,
+								 const int                           cur_mode)
+	{
+		LongMatrix matr_mapping(static_cast<int>(_TnsSize), static_cast<int>(_TnsSize));
+		for (int i = 0; i < static_cast<int>(_TnsSize); i++)
+		{
+			for (int j = 0, first = 1, prev = 0; j < static_cast<int>(_TnsSize); j++)
+			{
+				if (j == i)
+				{
+					matr_mapping(i, j) = 0;
+					continue;
+				}
+				if (first == 1)
+				{
+					matr_mapping(i, j) = 1;
+					first = 0;
+					prev = j;
+				}
+				else
+				{
+					matr_mapping(i, j) = matr_mapping(i, prev) * tns_dimensions[prev];
+					prev = j;
+				}
+			}
+		}
+
+		LongMatrix tuple(1, static_cast<int>(_TnsSize));
+
+		for (int nnz_k = 0; nnz_k < nnz; nnz_k++)
+		{
+			for (int column_idx = 0; column_idx < static_cast<int>(_TnsSize); column_idx++)
+			{
+				tuple(0, column_idx) = static_cast<long int>(Ratings_Base_T(column_idx, nnz_k));
+			}
+
+			long linear_col = ((matr_mapping.row(cur_mode)).cwiseProduct(tuple)).sum();
+
+			long row = tuple(0, cur_mode);
+
+			if (tns_sparse[cur_mode].outerSize() < row || tns_sparse[cur_mode].innerSize() < linear_col)
+			{
+				std::cerr << "error!" << tns_sparse[cur_mode].outerSize() << " " << row << " " << tns_sparse[cur_mode].innerSize() << " " << linear_col << std::endl;
+			}
+
+			if (tns_sparse[cur_mode].coeff(linear_col, row) == 0)
+			{
+				// Using insert to fill sparse matrix
+				tns_sparse[cur_mode].insert(linear_col, row) = Ratings_Base_T(static_cast<int>(_TnsSize), nnz_k);
+			}
+		}
+	}	
+	
+	template <std::size_t _TnsSize>
+	void Dist_NNZ(std::array<SparseMatrix, _TnsSize>        &layer_tns_sparse,
+				  long int                            const  nnz,
+				  std::vector<std::vector<int>>       const &skip_rows,
+				  std::array<int,_TnsSize>            const &fiber_rank,
+				  Matrix                              const &Ratings_Base_T,
+				  std::vector<std::vector<int>>       const &local_tns_dimensions)
+	{
+		LongMatrix matr_mapping(static_cast<int>(_TnsSize), static_cast<int>(_TnsSize));
+		for (int i = 0; i < static_cast<int>(_TnsSize); i++)
+		{
+			for (int j = 0, first = 1, prev = 0; j < static_cast<int>(_TnsSize); j++)
+			{
+				if (j == i)
+				{
+					matr_mapping(i, j) = 0;
+					continue;
+				}
+				if (first == 1)
+				{
+					matr_mapping(i, j) = 1;
+					first = 0;
+					prev = j;
+				}
+				else
+				{
+					matr_mapping(i, j) = matr_mapping(i, prev) * local_tns_dimensions[prev][fiber_rank[prev]];
+					prev = j;
+				}
+			}
+		}
+
+		long int local_nnz_counter = 0;
+
+		LongMatrix tuple(1, static_cast<int>(_TnsSize));
+
+		for (int nnz_k = 0; nnz_k < nnz; nnz_k++)
+		{
+			for (int column_idx = 0, insert_tuple_flag = 0; column_idx < static_cast<int>(_TnsSize) && insert_tuple_flag == column_idx; column_idx++)
+			{
+				if((Ratings_Base_T(column_idx, nnz_k) >= skip_rows[column_idx][fiber_rank[column_idx]]) && (Ratings_Base_T(column_idx, nnz_k) < local_tns_dimensions[column_idx][fiber_rank[column_idx]] + skip_rows[column_idx][fiber_rank[column_idx]]))
+				{
+					tuple(0, column_idx) = (long int)(Ratings_Base_T(column_idx, nnz_k)) - skip_rows[column_idx][fiber_rank[column_idx]];
+					insert_tuple_flag++;
+				}
+				else
+				{
+					break;
+				}
+				if (column_idx == static_cast<int>(_TnsSize) - 1)
+				{
+					local_nnz_counter++;
+					for (int mode_i = 0; mode_i < static_cast<int>(_TnsSize); mode_i++)
+					{
+						long int linear_col = ((matr_mapping.row(mode_i)).cwiseProduct(tuple)).sum();
+						long int row = tuple(0, mode_i);
+
+						if (layer_tns_sparse[mode_i].coeff(linear_col, row) == 0)
+						{
+							layer_tns_sparse[mode_i].insert(linear_col, row) = Ratings_Base_T(static_cast<int>(_TnsSize), nnz_k);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	template <std::size_t _TnsSize>
+	void Dist_NNZ_sorted(std::array<SparseMatrix, _TnsSize>        &layer_tns_sparse,
+						 long int                            const  nnz,
+						 std::vector<std::vector<int>>       const &skip_rows,
+						 std::array<int,_TnsSize>            const &fiber_rank,
+						 Matrix                              const &Ratings_Base_T,
+						 std::vector<std::vector<int>>       const &local_tns_dimensions,
+						 int                                 const  cur_mode)
+	{
+		LongMatrix matr_mapping(static_cast<int>(_TnsSize), static_cast<int>(_TnsSize));
+		for (int i = 0; i < static_cast<int>(_TnsSize); i++)
+		{
+			for (int j = 0, first = 1, prev = 0; j < static_cast<int>(_TnsSize); j++)
+			{
+				if (j == i)
+				{
+					matr_mapping(i, j) = 0;
+					continue;
+				}
+				if (first == 1)
+				{
+					matr_mapping(i, j) = 1;
+					first = 0;
+					prev = j;
+				}
+				else
+				{
+					matr_mapping(i, j) = matr_mapping(i, prev) * local_tns_dimensions[prev][fiber_rank[prev]];
+					prev = j;
+				}
+			}
+		}
+
+		long int local_nnz_counter = 0;
+
+		LongMatrix tuple(1, static_cast<int>(_TnsSize));
+
+		for (int nnz_k = 0; nnz_k < nnz; nnz_k++)
+		{
+			for (int column_idx = 0, insert_tuple_flag = 0; column_idx < static_cast<int>(_TnsSize) && insert_tuple_flag == column_idx; column_idx++)
+			{
+				if((Ratings_Base_T(column_idx, nnz_k) >= skip_rows[column_idx][fiber_rank[column_idx]]) && (Ratings_Base_T(column_idx, nnz_k) < local_tns_dimensions[column_idx][fiber_rank[column_idx]] + skip_rows[column_idx][fiber_rank[column_idx]]))
+				{
+					tuple(0, column_idx) = (long int)(Ratings_Base_T(column_idx, nnz_k)) - skip_rows[column_idx][fiber_rank[column_idx]];
+					insert_tuple_flag++;
+				}
+				else
+				{
+					break;
+				}
+				if (column_idx == static_cast<int>(_TnsSize) - 1)
+				{
+					local_nnz_counter++;
+					
+					long int linear_col = ((matr_mapping.row(cur_mode)).cwiseProduct(tuple)).sum();
+					long int row = tuple(0, cur_mode);
+
+					if (layer_tns_sparse[cur_mode].coeff(linear_col, row) == 0)
+					{
+						layer_tns_sparse[cur_mode].insert(linear_col, row) = Ratings_Base_T(static_cast<int>(_TnsSize), nnz_k);
+					}
+				}
+			}
+		}
+	}
+
+	template <int TnsSize, int mode, typename Type>
+	bool SortRows(const std::vector<Type> &v1, const std::vector<Type> &v2)
+	{
+		std::array<int, TnsSize> sort_direction;
+		bool final_expr{false}; // final criterion for sorting
+		bool prev_equal{false}; // keep history of equal comparisons between v1,v2
+
+		sort_direction[0] = mode;
+		sort_direction[1] = (mode < TnsSize - 1) ? TnsSize - 1 : TnsSize - 2;
+		for (int i = 2; i < TnsSize; i++)
+		{
+			sort_direction[i] = sort_direction[i - 1] - 1;
+			if (sort_direction[i] == mode)
+			{
+				sort_direction[i]--;
+			}
+		}
+		std::array<bool, TnsSize> expr;
+		for (int i = 0; i < TnsSize; i++)
+		{
+			if (i > 0)
+			{
+				expr[i] = prev_equal && (v1[sort_direction[i]] < v2[sort_direction[i]]);
+				final_expr = final_expr || expr[i];
+				prev_equal = prev_equal && (v1[sort_direction[i]] == v2[sort_direction[i]]);
+
+				if (final_expr)
+				{
+					return final_expr;
+				}
+			}
+			else
+			{
+				expr[i] = v1[sort_direction[i]] < v2[sort_direction[i]];
+				final_expr = final_expr || expr[i];
+				prev_equal = (v1[sort_direction[i]] == v2[sort_direction[i]]);
+				if (final_expr)
+				{
+					return final_expr;
+				}
+			}
+		}
+
+		return final_expr;
+	}
+
+	/**
+     * Shuffles (or permutes) the indices of nonzeros in order to distribute them uniformly.
+     * 
+     * @param  nnz 						[in]     The nonzeros number.
+     * @param  cur_mode 				[in]     The current mode.	 
+     * @param  tns_dim					[in]     The current mode tensor dimension. 
+     * @param  Ratings_Base_T   		[in]     The input matrix which containts all nonzeros.
+     * @param  perm_tns_indices    		[in,out] @c Stl array containing the Tensor indices (vector), 
+	 * 											 which will pe permuted.
+     * @param  Balanced_Ratings_Base_T  [in/out] The ouput matrix which containts all permuted nonzeros.
+     */
+	void PermuteModeN(long int              const  nnz,
+					  int                   const  cur_mode,
+					  int                   const  tns_dim,
+					  Matrix                const &Ratings_Base_T,
+					  std::vector<long int>       &perm_tns_indices,
+					  Matrix                      &Balanced_Ratings_Base_T)
+
+	{
+		// Copy values
+		Balanced_Ratings_Base_T = Ratings_Base_T;
+
+		// Allocate & Initialize permuted dims
+		perm_tns_indices.reserve(tns_dim);
+
+		for (int i_i = 0; i_i < tns_dim; i_i++)
+		{
+			perm_tns_indices.push_back(i_i);
+		}
+
+		// Permute dims
+		std::random_device rd;
+		std::mt19937 g(rd());
+		std::shuffle(perm_tns_indices.begin(), perm_tns_indices.end(), g);
+		double prev = -1;
+		long int idx;
+		std::vector<long int>::iterator it;
+		long int perm_idx = 0;
+		for (long int nnz_i = 0; nnz_i < nnz; nnz_i++)
+		{
+			if(Ratings_Base_T(cur_mode, nnz_i) != prev)
+			{
+				idx = static_cast<long int>(Ratings_Base_T(cur_mode, nnz_i));
+				it = std::find(perm_tns_indices.begin(), perm_tns_indices.end(), idx);
+				perm_idx = it - perm_tns_indices.begin();
+				Balanced_Ratings_Base_T(cur_mode, nnz_i) = static_cast<double>(perm_idx);
+				prev = Ratings_Base_T(cur_mode, nnz_i);
+			}
+			else
+			{
+				Balanced_Ratings_Base_T(cur_mode, nnz_i) = static_cast<double>(perm_idx);
+				prev = Ratings_Base_T(cur_mode, nnz_i);
+			}
+		}
+	}
+
+	/**
+     * Shuffles (or permutes) the indices of nonzeros in order to distribute them uniformly.
+     * 
+     * @tparam TnsSize         Tensor Order. 
+     * 
+     * @param  nnz 						[in]     The nonzeros number.
+     * @param  tns_dimensions			[in]     @c Stl array containing the Tensor dimensions, whose
+     *                              			 length must be same as the Tensor order.
+     * @param  Ratings_Base_T   		[in]     The input matrix which containts all nonzeros.
+     * @param  perm_tns_indices    		[in,out] @c Stl array containing the Tensor indices (vector), 
+	 * 											 which will pe permuted.
+     * @param  Balanced_Ratings_Base_T  [in/out] The ouput matrix which containts all permuted nonzeros.
+     */
+	template <std::size_t TnsSize>
+	void BalanceDataset(long int  									 const  nnz,
+						std::array<int, TnsSize> 					 const  tns_dimensions,
+						Matrix 										 const &Ratings_Base_T,
+						std::array<std::vector<long int>, TnsSize> 	       &perm_tns_indices,
+						Matrix 							   				   &Balanced_Ratings_Base_T)
+	{
+		for (int i = 0; i < static_cast<int>(TnsSize); i++)
+		{
+			PermuteModeN(nnz, i, tns_dimensions[i], Ratings_Base_T, perm_tns_indices[i], Balanced_Ratings_Base_T);
+		}
+	}
+
+	/**
+     * Permute rows of factors according to shuffled indices perm_tns_indices.
+     * 
+     * @tparam TnsSize         Tensor Order. 
+     * 
+     * @param  depermuted_factors 	[in]     	The input factors.
+     * @param  perm_tns_indices  	[in] 	 	@c Stl array containing the Tensor indices (vector), 
+	 * 										 	which will pe permuted.
+     * @param  permuted_factors_T  	[in/out] 	The output factors, whose rows are permuted.
+     */
+	template <std::size_t TnsSize>
+	void PermuteFactors(std::array<Matrix, TnsSize> 			   const &depermuted_factors,
+						std::array<std::vector<long int>, TnsSize> const &perm_tns_indices,
+						std::array<Matrix, TnsSize> 				     &permuted_factors_T)
+	{
+		Matrix temp_permuted_factor;
+		for (int i = 0; i < static_cast<int>(TnsSize); i++)
+		{
+			temp_permuted_factor = Matrix::Zero(depermuted_factors[i].rows(), depermuted_factors[i].cols());
+			for (int row = 0; row < temp_permuted_factor.rows(); row++)
+			{
+				temp_permuted_factor.row(row) = depermuted_factors[i].row(perm_tns_indices[i][row]);
+			}
+			permuted_factors_T[i] = temp_permuted_factor.transpose();
+		}
+	}
+
+	/**
+     * Depermute rows of factors according to shuffled indices perm_tns_indices.
+     * 
+     * @tparam TnsSize         Tensor Order. 
+     * 
+     * @param  depermuted_factors 	[in]     	The input factors, whose rows are permuted.
+     * @param  perm_tns_indices  	[in] 	 	@c Stl array containing the Tensor indices (vector), 
+	 * 										 	which will pe permuted.
+     * @param  permuted_factors  	[in/out] 	The output factors, whose rows are depermuted.
+     */
+	template <std::size_t TnsSize>
+	void DepermuteFactors(std::array<Matrix, TnsSize>                const &permuted_factors,
+						  std::array<std::vector<long int>, TnsSize> const &perm_tns_indices,
+						  std::array<Matrix, TnsSize>                      &depermuted_factors)
+	{
+		for (int i = 0; i < static_cast<int>(TnsSize); i++)
+		{
+			depermuted_factors[i] = Matrix::Zero(permuted_factors[i].rows(), permuted_factors[i].cols());
+			for (int row = 0; row < permuted_factors[i].rows(); row++)
+			{
+				depermuted_factors[i].row(perm_tns_indices[i][row]) = permuted_factors[i].row(row);
 			}
 		}
 	}

@@ -177,12 +177,37 @@ namespace partensor
          * @param  st        [in,out] Struct where the returned values of @c Cpd are stored.
          *                            In this case the cost function value is updated.
          */
+        void cost_function_init( CartCommunicator const &grid_comm,
+                                 Member_Variables       &mv,
+                                 Status                 &st )
+        {
+            mv.local_f_value =
+                ((mv.proc_krao[lastFactor].transpose() * mv.tnsX_mat_lastFactor_T) * mv.layer_factors[lastFactor]).trace();  
+            all_reduce( grid_comm, 
+                        inplace(&mv.local_f_value),
+                        1, 
+                        std::plus<double>() );
+                        
+            Matrix cwiseFactor_prod = PartialCwiseProd(mv.factor_T_factor, lastFactor) * mv.factor_T_factor[lastFactor];
+            st.f_value = 
+                sqrt(st.frob_tns - 2 * mv.local_f_value + cwiseFactor_prod.trace());
+        }
+
+        /*
+         * Compute the cost function value at the end of each outer iteration
+         * based on the last factor.
+         * 
+         * @param  grid_comm [in]     MPI communicator where the new cost function value
+         *                            will be communicated and computed.
+         * @param  mv        [in]     Struct where ALS variables are stored.
+         * @param  st        [in,out] Struct where the returned values of @c Cpd are stored.
+         *                            In this case the cost function value is updated.
+         */
         void cost_function( CartCommunicator const &grid_comm,
                             Member_Variables       &mv,
                             Status                 &st )
         {
-            mv.local_f_value =
-                ((mv.proc_krao[lastFactor].transpose() * mv.tnsX_mat_lastFactor_T) * mv.layer_factors[lastFactor]).trace();  
+            mv.local_f_value = ((mv.layer_mttkrp_T[lastFactor] * mv.layer_factors[lastFactor]).trace());
             all_reduce( grid_comm, 
                         inplace(&mv.local_f_value),
                         1, 
@@ -518,7 +543,7 @@ namespace partensor
                       square_norm(mv.subTns), 
                       status.frob_tns, 
                       std::plus<double>());
-          cost_function( grid_comm, mv, status );
+          cost_function_init( grid_comm, mv, status );
           status.rel_costFunction = status.f_value / sqrt(status.frob_tns);
 
           // Wait for all processors to reach here
@@ -621,7 +646,7 @@ namespace partensor
                       (mv.subTns_mat[lastFactor]).squaredNorm(), 
                       status.frob_tns, 
                       std::plus<double>());
-          cost_function( grid_comm, mv, status );
+          cost_function_init( grid_comm, mv, status );
           status.rel_costFunction = status.f_value / sqrt(status.frob_tns);
 
           // Wait for all processors to reach here

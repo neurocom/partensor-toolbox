@@ -40,6 +40,7 @@
 #endif /* USE_MPI */
 
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
 #include <unsupported/Eigen/CXX11/Tensor>
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
@@ -181,12 +182,13 @@ namespace partensor
     using IntArray    = typename TensorTraits<Tensor_>::IntArray;
 
     static Method      constexpr DefaultMethod = Method::als;                     /**< Default value for Method is als. */
-    static Constraint  constexpr DefaultConstraint = Constraint::unconstrained;   /**< Default value for Constraint is unconstrained. */
+    // static Constraint  constexpr DefaultConstraint = Constraint::unconstrained;   /**< Default value for Constraint is unconstrained. */
+    static Constraint  constexpr DefaultConstraint = Constraint::nonnegativity;   /**< Default value for Constraint is nonnegativity. */
     static double      constexpr DefaultThresholdError = 1e-3;                    /**< Default value for cost function's threshold. */
     static double      constexpr DefaultNesterovTolerance = 1e-2;                 /**< Default value for Nesterov's tolerance. */
     static unsigned    constexpr DefaultMaxIter = 20;                             /**< Default value outer loop maximum iterations. */
     static Duration    constexpr DefaultMaxDuration = Duration(10000);            /**< Default value outer loop maximum duration. */
-    static double      constexpr DefaultLambda = 0.0;                             /**< Default value for lambda. */
+    static double      constexpr DefaultLambda = 0.1;                             /**< Default value for lambda. */
     static double      constexpr DefaultProcessorPerMode = 2;                     /**< Default value for number of processors per tensor mode. */
     static int         constexpr DefaultAccelerationCoefficient = 3;              /**< Default value for acceleration coefficient. */
     static int         constexpr DefaultAccelerationFail = 0;                     /**< Default value for acceleration fail. */
@@ -194,6 +196,58 @@ namespace partensor
     static bool        constexpr DefaultNormalization = true;                     /**< Default value for normalization. */
     
     static bool        constexpr DefaultWriteToFile = false;                      /**< Default value for write final factors to files. */
+    
+    static DoubleArray constexpr DefaultLambdas = []() constexpr -> auto {
+      DoubleArray c{};
+      for (auto &e : c) e = DefaultLambda;
+      return c;
+    } ();
+
+    static Constraints constexpr DefaultConstraints = []() constexpr -> auto {
+      Constraints c{};
+      for (auto &e : c) e = DefaultConstraint;
+      return c;
+    } ();
+
+    static IntArray constexpr DefaultProcessorsPerMode = []() constexpr -> auto {
+      IntArray c{};
+      for(auto &e : c) e = DefaultProcessorPerMode;
+      return c;
+    } ();
+
+  };
+
+  template<typename SparseTensor_>
+  struct SparseDefaultValues {
+
+    static std::size_t constexpr TnsSize = SparseTensorTraits<SparseTensor_>::TnsSize;
+
+    using DoubleArray = typename SparseTensorTraits<SparseTensor_>::DoubleArray;
+    using Constraints = typename SparseTensorTraits<SparseTensor_>::Constraints;
+    using IntArray    = typename SparseTensorTraits<SparseTensor_>::IntArray;
+
+    static Method      constexpr DefaultMethod = Method::als;                      /**< Default value for Method is als. */
+    // static Constraint  constexpr DefaultConstraint = Constraint::unconstrained;   /**< Default value for Constraint is unconstrained. */
+    static Constraint  constexpr DefaultConstraint = Constraint::nonnegativity;    /**< Default value for Constraint is nonnegativity. */
+    static double      constexpr DefaultThresholdError = 1e-3;                     /**< Default value for cost function's threshold. */
+    static double      constexpr DefaultNesterovTolerance = 1e-2;                  /**< Default value for Nesterov's tolerance. */
+    static int         constexpr DefaultMaxNesterovIter   = 20;
+    static unsigned    constexpr DefaultMaxIter = 20;                              /**< Default value outer loop maximum iterations. */
+    static Duration    constexpr DefaultMaxDuration = Duration(10000);             /**< Default value outer loop maximum duration. */
+    static double      constexpr DefaultC_stochastic_perc = 0.5;
+    static double      constexpr DefaultLambda = 0.01;                             /**< Default value for lambda. */
+    static double      constexpr DefaultProcessorPerMode = 2;                      /**< Default value for number of processors per tensor mode. */
+    static int         constexpr DefaultAccelerationCoefficient = 3;               /**< Default value for acceleration coefficient. */
+    static int         constexpr DefaultAccelerationFail = 0;                      /**< Default value for acceleration fail. */
+    static bool        constexpr DefaultAcceleration = false;                      /**< Default value for acceleration. */
+    static bool        constexpr DefaultAveraging = false;                         /**< Default value for averaging. */
+    static bool        constexpr DefaultNormalization = false;                     /**< Default value for normalization. */
+    static bool        constexpr DefaultInitializeFactors = false;                 /**< Default value for initializeFactors. */
+    static bool        constexpr DefaultReadFactorsFromFile = false;               /**< Default value for initializeFactors. */
+    
+    static bool        constexpr DefaultWriteToFile = false;                       /**< Default value for write final factors to files. */
+
+    static int        constexpr DefaultNonZeros     = 1000;                        /**< Default value for the number of non-zeros elements in a sparse matrix. */
     
     static DoubleArray constexpr DefaultLambdas = []() constexpr -> auto {
       DoubleArray c{};
@@ -281,6 +335,88 @@ namespace partensor
       Options &operator=(Options      &&) = default;
     };
 
+  /*
+      Sparse Options
+  */
+  template < std::size_t _TnsSize,
+            typename ExecutionPolicy_ = execution::sequenced_policy,  
+            template <typename T> class DefaultValues_ = SparseDefaultValues    >
+  struct SparseOptions 
+  {
+      using SparseTenor = typename partensor::SparseTensor<_TnsSize>;
+      static constexpr std::size_t TnsSize = SparseTensorTraits<SparseTenor>::TnsSize;          /**< Tensor Order. */
+
+      using DataType         = typename SparseTensorTraits<SparseTenor>::DataType;              /**< Tensor Data type. */
+      using MatrixType       = typename SparseTensorTraits<SparseTenor>::MatrixType;            /**< @c Eigen Matrix with the same Data type with the Tensor. */
+      using Constraints      = typename SparseTensorTraits<SparseTenor>::Constraints;
+      using DoubleArray      = typename SparseTensorTraits<SparseTenor>::DoubleArray;
+      using SparseMatrixType = typename SparseTensorTraits<SparseTenor>::SparseMatrixType;
+      using LongMatrixType   = typename SparseTensorTraits<SparseTenor>::LongMatrixType;
+      using Dimensions       = typename SparseTensorTraits<SparseTenor>::Dimensions;
+      using SparseTensor     = typename SparseTensorTraits<SparseTenor>::SparseTensor;
+      using MatrixArray      = typename SparseTensorTraits<SparseTenor>::MatrixArray;
+      using StringArray      = std::array<std::string, TnsSize>; 
+
+      int                      rank;
+      std::array<int, TnsSize> tnsDims;
+      int                      nonZeros;
+      bool                     initialized_factors;
+      bool                     read_factors_from_file;
+      MatrixArray              factorsInit;
+
+      Method        method;
+      Constraints   constraints;
+      double        threshold_error;
+      double        nesterov_delta_1;
+      double        nesterov_delta_2;
+      int           max_nesterov_iter;
+      double        c_stochastic_perc;
+      DoubleArray   lambdas;
+      unsigned      max_iter;
+      Duration      max_duration;
+      int           accel_coeff;
+      int           accel_fail;    
+      bool          acceleration;
+      bool          averaging;
+      bool          normalization;
+      bool          writeToFile;
+
+      std::string   ratings_path;
+      StringArray   initial_factors_paths;
+      StringArray   final_factors_paths;
+
+      SparseOptions() : initialized_factors(DefaultValues_<SparseTenor>::DefaultInitializeFactors),
+                        read_factors_from_file(DefaultValues_<SparseTenor>::DefaultReadFactorsFromFile),
+                        method(DefaultValues_<SparseTenor>::DefaultMethod),                        /**< Default value for Method is als.             */
+                        constraints(DefaultValues_<SparseTenor>::DefaultConstraints),              /**< Default value for Constraint is no negative. */
+                        threshold_error(DefaultValues_<SparseTenor>::DefaultThresholdError),       /**< Default value for cost function's threshold. */
+                        nesterov_delta_1(DefaultValues_<SparseTenor>::DefaultNesterovTolerance),   /**< Default value for Nesterov's tolerance.     */
+                        nesterov_delta_2(DefaultValues_<SparseTenor>::DefaultNesterovTolerance),   /**< Default value for Nesterov's tolerance.     */
+                        max_nesterov_iter(DefaultValues_<SparseTenor>::DefaultMaxNesterovIter),
+                        c_stochastic_perc(DefaultValues_<SparseTenor>::DefaultC_stochastic_perc),
+                        lambdas(DefaultValues_<SparseTenor>::DefaultLambdas),                      /**< Default value for lambda.                    */
+                        max_iter(DefaultValues_<SparseTenor>::DefaultMaxIter),                     /**< Default value outer loop maximum iterations. */
+                        max_duration(DefaultValues_<SparseTenor>::DefaultMaxDuration),             /**< Default value outer loop maximum duration.   */
+                        accel_coeff(DefaultValues_<SparseTenor>::DefaultAccelerationCoefficient),  /**< Default value for acceleration coefficient. */
+                        accel_fail(DefaultValues_<SparseTenor>::DefaultAccelerationFail),          /**< Default value for acceleration fail. */
+                        acceleration(DefaultValues_<SparseTenor>::DefaultAcceleration),            /**< Default value for acceleration. */
+                        averaging(DefaultValues_<SparseTenor>::DefaultAveraging),                  /**< Default value for averaging. */
+                        normalization(DefaultValues_<SparseTenor>::DefaultNormalization),          /**< Default value for normalization. */
+                        writeToFile(DefaultValues_<SparseTenor>::DefaultWriteToFile)               /**< Default value for write final factors to files. */
+                        // final_factors_paths(DefaultValues_<SparseTenor>::DefaultFinalFactorsPaths) /**< Default value for path for factors at the end of the algorithm. */  
+      { 
+        for(std::size_t i=0; i<TnsSize; ++i)
+        {
+          final_factors_paths[i] = "final_" + std::to_string(i) + ".bin";
+        }
+      }
+      SparseOptions(SparseOptions const &) = default;
+      SparseOptions(SparseOptions      &&) = default;
+
+      SparseOptions &operator=(SparseOptions const &) = default;
+      SparseOptions &operator=(SparseOptions      &&) = default;
+    };
+
     template < typename Tensor_,
                typename ExecutionPolicy_ = execution::sequenced_policy,
                template <typename T> class DefaultValues_ = DefaultValues   >
@@ -300,9 +436,42 @@ namespace partensor
       options.accel_coeff         = DefaultValues_<Tensor_>::DefaultAccelerationCoefficient; // Default value for acceleration coefficient.
       options.accel_fail          = DefaultValues_<Tensor_>::DefaultAccelerationFail;        // Default value for acceleration fail.
       options.acceleration        = DefaultValues_<Tensor_>::DefaultAcceleration;            // Default value for acceleration.
+      // options.averaging           = DefaultValues_<Tensor_>::DefaultAveraging;               // Default value for averaging.
       options.normalization       = DefaultValues_<Tensor_>::DefaultNormalization;           // Default value for normalization.
       options.writeToFile         = DefaultValues_<Tensor_>::DefaultWriteToFile;             // Default value for write final factors to files.
       // options.final_factors_paths = DefaultValues_<Tensor_>::DefaultFinalFactorsPaths;       // Default value for path for factors at the end of the algorithm.
+      for(std::size_t i=0; i<TnsSize; ++i)
+      {
+        options.final_factors_paths[i] = "final_" + std::to_string(i) + ".bin";
+      }
+      return options;
+    }
+
+    template < std::size_t _TnsSize,
+               typename ExecutionPolicy_ = execution::sequenced_policy,
+               template <typename T> class DefaultValues_ = SparseDefaultValues   >
+    SparseOptions<_TnsSize, ExecutionPolicy_, DefaultValues_> MakeSparseOptions()
+    {
+      SparseOptions<_TnsSize,ExecutionPolicy_,DefaultValues_> options;
+      using SparseTensor          = typename partensor::SparseTensor<_TnsSize>;
+      static constexpr std::size_t TnsSize = SparseTensorTraits<SparseTensor>::TnsSize;     /**< Tensor Order. */
+
+      options.method              = DefaultValues_<SparseTensor>::DefaultMethod;                  // Default value for Method is als.
+      options.constraints         = DefaultValues_<SparseTensor>::DefaultConstraints;             // Default value for Constraint is no negative.
+      options.threshold_error     = DefaultValues_<SparseTensor>::DefaultThresholdError;          // Default value for cost function's threshold.
+      options.nesterov_delta_1    = DefaultValues_<SparseTensor>::DefaultNesterovTolerance;       // Default value for Nesterov's tolerance.
+      options.nesterov_delta_2    = DefaultValues_<SparseTensor>::DefaultNesterovTolerance;       // Default value for Nesterov's tolerance.
+      options.c_stochastic_perc   = DefaultValues_<SparseTensor>::DefaultC_stochastic_perc;
+      options.lambdas             = DefaultValues_<SparseTensor>::DefaultLambdas;                 // Default value for lambda.
+      options.max_iter            = DefaultValues_<SparseTensor>::DefaultMaxIter;                 // Default value outer loop maximum iterations.
+      options.max_duration        = DefaultValues_<SparseTensor>::DefaultMaxDuration;             // Default value outer loop maximum duration.
+      options.accel_coeff         = DefaultValues_<SparseTensor>::DefaultAccelerationCoefficient; // Default value for acceleration coefficient.
+      options.accel_fail          = DefaultValues_<SparseTensor>::DefaultAccelerationFail;        // Default value for acceleration fail.
+      options.acceleration        = DefaultValues_<SparseTensor>::DefaultAcceleration;            // Default value for acceleration.
+      options.averaging           = DefaultValues_<SparseTensor>::DefaultAveraging;               // Default value for averaging.
+      options.normalization       = DefaultValues_<SparseTensor>::DefaultNormalization;           // Default value for normalization.
+      options.writeToFile         = DefaultValues_<SparseTensor>::DefaultWriteToFile;             // Default value for write final factors to files.
+      // options.final_factors_paths = DefaultValues_<SparseTensor>::DefaultFinalFactorsPaths;       // Default value for path for factors at the end of the algorithm.
       for(std::size_t i=0; i<TnsSize; ++i)
       {
         options.final_factors_paths[i] = "final_" + std::to_string(i) + ".bin";
@@ -329,9 +498,42 @@ namespace partensor
       options.accel_coeff         = DefaultValues_<Tensor_>::DefaultAccelerationCoefficient; // Default value for acceleration coefficient.
       options.accel_fail          = DefaultValues_<Tensor_>::DefaultAccelerationFail;        // Default value for acceleration fail.
       options.acceleration        = DefaultValues_<Tensor_>::DefaultAcceleration;            // Default value for acceleration.
+      // options.averaging           = DefaultValues_<Tensor_>::DefaultAveraging;               // Default value for averaging.
       options.normalization       = DefaultValues_<Tensor_>::DefaultNormalization;           // Default value for normalization.
       options.writeToFile         = DefaultValues_<Tensor_>::DefaultWriteToFile;             // Default value for write final factors to files.
       // options.final_factors_paths = DefaultValues_<Tensor_>::DefaultFinalFactorsPaths;       // Default value for path for factors at the end of the algorithm.
+      for(std::size_t i=0; i<TnsSize; ++i)
+      {
+        options.final_factors_paths[i] = "final_" + std::to_string(i) + ".bin";
+      }
+      return options;
+    }
+
+    template < std::size_t _TnsSize,
+               typename ExecutionPolicy_ = execution::sequenced_policy,
+               template <typename T> class DefaultValues_ = SparseDefaultValues   >
+    SparseOptions<_TnsSize, ExecutionPolicy_, DefaultValues_> MakeSparseOptions(DefaultValues_<partensor::SparseTensor<_TnsSize>> &&dv, ExecutionPolicy_ &&xp)
+    {
+      SparseOptions<_TnsSize,ExecutionPolicy_,DefaultValues_> options;
+      using SparseTensor          = typename partensor::SparseTensor<_TnsSize>;
+      static constexpr std::size_t TnsSize = SparseTensorTraits<SparseTensor>::TnsSize;     /**< Tensor Order. */
+
+      options.method              = DefaultValues_<SparseTensor>::DefaultMethod;                  // Default value for Method is als.
+      options.constraints         = DefaultValues_<SparseTensor>::DefaultConstraints;             // Default value for Constraint is no negative.
+      options.threshold_error     = DefaultValues_<SparseTensor>::DefaultThresholdError;          // Default value for cost function's threshold.
+      options.nesterov_delta_1    = DefaultValues_<SparseTensor>::DefaultNesterovTolerance;       // Default value for Nesterov's tolerance.
+      options.nesterov_delta_2    = DefaultValues_<SparseTensor>::DefaultNesterovTolerance;       // Default value for Nesterov's tolerance.
+      options.c_stochastic_perc   = DefaultValues_<SparseTensor>::DefaultC_stochastic_perc;
+      options.lambdas             = DefaultValues_<SparseTensor>::DefaultLambdas;                 // Default value for lambda.
+      options.max_iter            = DefaultValues_<SparseTensor>::DefaultMaxIter;                 // Default value outer loop maximum iterations.
+      options.max_duration        = DefaultValues_<SparseTensor>::DefaultMaxDuration;             // Default value outer loop maximum duration.
+      options.accel_coeff         = DefaultValues_<SparseTensor>::DefaultAccelerationCoefficient; // Default value for acceleration coefficient.
+      options.accel_fail          = DefaultValues_<SparseTensor>::DefaultAccelerationFail;        // Default value for acceleration fail.
+      options.acceleration        = DefaultValues_<SparseTensor>::DefaultAcceleration;            // Default value for acceleration.
+      options.averaging           = DefaultValues_<SparseTensor>::DefaultAveraging;                    // Default value for averaging.      
+      options.normalization       = DefaultValues_<SparseTensor>::DefaultNormalization;           // Default value for normalization.
+      options.writeToFile         = DefaultValues_<SparseTensor>::DefaultWriteToFile;             // Default value for write final factors to files.
+      // options.final_factors_paths = DefaultValues_<SparseTensor>::DefaultFinalFactorsPaths;       // Default value for path for factors at the end of the algorithm.
       for(std::size_t i=0; i<TnsSize; ++i)
       {
         options.final_factors_paths[i] = "final_" + std::to_string(i) + ".bin";
@@ -392,6 +594,51 @@ namespace partensor
       }
     };
 
+    /**
+     * Sparse Status
+     */
+    template < std::size_t _TnsSize,
+               typename ExecutionPolicy_ = execution::sequenced_policy,
+               template <typename T> class DefaultValues_ = SparseDefaultValues  >
+    struct SparseStatus
+    {
+      using SparseTensor = typename partensor::SparseTensor<_TnsSize>;
+      using MatrixArray  = typename SparseTensorTraits<SparseTensor>::MatrixArray; /**< @c Eigen Matrix with the same Data type with the Tensor. */
+
+      SparseOptions<_TnsSize,ExecutionPolicy_,DefaultValues_> options;
+      double                                                  frob_tns          = 0.0;         /**< Stores the Frobenius norm of an @c Eigen Tensor. */
+      double                                                  f_value           = 0.0;         /**< Stores the cost function. */
+      double                                                  rel_costFunction  = 0.0;         /**< Stores the relative cost function. */
+      unsigned                                                ao_iter           = 0;           /**< Stores the iteration where the cost function reached the wanted threshold. */
+      MatrixArray                                             factors;                         /**< An stl array with the resulting Factors from CPD factorization of the Eigen Tensor. */
+
+      SparseStatus()               = default;
+      SparseStatus(SparseStatus const &) = default;
+      SparseStatus(SparseStatus      &&) = default;
+
+      SparseStatus(SparseOptions<_TnsSize,ExecutionPolicy_,DefaultValues_> const &opt) : options(opt)
+      {  }
+
+      SparseStatus &operator=(SparseStatus const &) = default;
+      SparseStatus &operator=(SparseStatus      &&) = default;
+
+      /*
+      Constructor called, in case the user decides to change one or more 
+      of the options and use them in the factorization.
+      */
+      SparseStatus &operator=(SparseOptions<_TnsSize,ExecutionPolicy_,DefaultValues_> const &opts)
+      {
+        options = opts;
+
+        return *this;
+      }
+
+      explicit operator SparseOptions<_TnsSize,ExecutionPolicy_,DefaultValues_>& ()
+      {
+        return options;
+      }
+    };
+
     template < typename Tensor_,
                typename ExecutionPolicy_ = execution::sequenced_policy,
                template <typename T> class DefaultValues_ = DefaultValues   >
@@ -412,6 +659,30 @@ namespace partensor
       Status<Tensor_,ExecutionPolicy_t,DefaultValues_>  status;
 
       status.options = MakeOptions<Tensor_>(std::forward<ExecutionPolicy_>(xp));
+
+      return status;
+    }
+
+    template < std::size_t _TnsSize,
+               typename ExecutionPolicy_ = execution::sequenced_policy,
+               template <typename T> class DefaultValues_ = SparseDefaultValues   >
+    SparseStatus<_TnsSize> MakeSparseStatus()
+    {
+      SparseStatus<_TnsSize,ExecutionPolicy_,DefaultValues_>  status;
+
+      status.options = MakeSparseOptions<_TnsSize,ExecutionPolicy_,DefaultValues_>();
+
+      return status;
+    }
+
+    template < std::size_t _TnsSize,
+               typename ExecutionPolicy_,
+               template <typename T> class DefaultValues_   >
+    SparseStatus<_TnsSize,std::remove_cv_t<std::remove_reference_t<ExecutionPolicy_>>,DefaultValues_> MakeSparseStatus(DefaultValues_<partensor::SparseTensor<_TnsSize>> &&dv, ExecutionPolicy_ &&xp)
+    {      
+      SparseStatus<_TnsSize,ExecutionPolicy_,DefaultValues_>  status;
+
+      status.options = MakeSparseOptions<_TnsSize,ExecutionPolicy_,DefaultValues_>();
 
       return status;
     }
@@ -446,12 +717,50 @@ namespace partensor
       return options;
     }
 
+    template <std::size_t _TnsSize>
+    struct SparseOptions<_TnsSize,execution::openmpi_policy,SparseDefaultValues> : public SparseOptions<_TnsSize>
+    {
+      using SparseOptions<_TnsSize,execution::sequenced_policy,SparseDefaultValues>::constraints;
+
+      using SparseTensor = typename partensor::SparseTensor<_TnsSize>;
+      using IntArray     = typename SparseTensorTraits<SparseTensor>::IntArray;
+
+      IntArray proc_per_mode;
+
+      SparseOptions() : proc_per_mode(SparseDefaultValues<SparseTensor>::DefaultProcessorsPerMode)
+      { }
+      SparseOptions(SparseOptions const &) = default;
+      SparseOptions(SparseOptions      &&) = default;
+
+      SparseOptions &operator=(SparseOptions const &) = default;
+      SparseOptions &operator=(SparseOptions      &&) = default;
+    };
+
+    template <std::size_t _TnsSize>
+    SparseOptions<_TnsSize,execution::openmpi_policy,SparseDefaultValues> MakeSparseOptions(execution::openmpi_policy &&)
+    {
+      using SparseTensor = typename partensor::SparseTensor<_TnsSize>;
+      
+      SparseOptions<_TnsSize,execution::openmpi_policy,SparseDefaultValues>  options;
+
+      static_cast<SparseOptions<_TnsSize>&>(options) = MakeSparseOptions<_TnsSize>();
+
+      options.proc_per_mode = SparseDefaultValues<SparseTensor>::DefaultProcessorsPerMode;
+
+      return options;
+    }
+
     template <typename Tensor_>
     using MpiOptions = Options<Tensor_,execution::openmpi_policy,DefaultValues>;
 
     template <typename Tensor_>
     using MpiStatus = Status<Tensor_,execution::openmpi_policy,DefaultValues>;
 
+    template < std::size_t _TnsSize>
+    using MpiSparseOptions = SparseOptions<_TnsSize,execution::openmpi_policy,SparseDefaultValues>;
+
+    template < std::size_t _TnsSize>
+    using MpiSparseStatus = SparseStatus<_TnsSize,execution::openmpi_policy,SparseDefaultValues>;
 
     template <typename Tensor_>
     using OmpOptions = Options<Tensor_,execution::openmp_policy,DefaultValues>;
@@ -459,6 +768,17 @@ namespace partensor
     template <typename Tensor_>
     using OmpStatus = Status<Tensor_,execution::openmp_policy,DefaultValues>;
 
+    template <typename Tensor_>
+    using CudaOptions = Options<Tensor_, execution::cuda_policy, DefaultValues>;
+
+    template <typename Tensor_>
+    using CudaStatus = Status<Tensor_, execution::cuda_policy, DefaultValues>;
+
+    template <std::size_t _TnsSize>
+    using OmpSparseOptions = SparseOptions<_TnsSize,execution::openmp_policy,SparseDefaultValues>;
+
+    template <std::size_t _TnsSize>
+    using OmpSparseStatus = SparseStatus<_TnsSize,execution::openmp_policy,SparseDefaultValues>;
 
 } // namespace partensor
 
