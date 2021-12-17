@@ -24,6 +24,7 @@
 #ifndef PARTENSOR_TENSOR_OPERATIONS_HPP
 #define PARTENSOR_TENSOR_OPERATIONS_HPP
 
+#include <iostream>
 #include "PARTENSOR_basic.hpp"
 
 namespace partensor
