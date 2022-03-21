@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['labelset',['LabelSet',['../structpartensor_1_1I__TnsNode.html#a83503e70df8900262145dae6aff4a3b3',1,'partensor::I_TnsNode::LabelSet()'],['../structpartensor_1_1TnsNode_3_010_01_4.html#a4e4d6741d60a519ff55cf2429f603398',1,'partensor::TnsNode&lt; 0 &gt;::LabelSet()'],['../structpartensor_1_1ExprNode.html#ae366efcddd91ee2c40d8ec03addccf10',1,'partensor::ExprNode::LabelSet()']]],
-  ['left',['Left',['../structpartensor_1_1I__TnsNode.html#a1aa30e1c779e9bff57e4d148b5a6a784',1,'partensor::I_TnsNode::Left()'],['../structpartensor_1_1TnsNode_3_010_01_4.html#a7dbf1d255659de660c9b97600e084a2e',1,'partensor::TnsNode&lt; 0 &gt;::Left()'],['../structpartensor_1_1ExprNode.html#a6c2cf48c4437bc1c9474d55278e69d13',1,'partensor::ExprNode::Left()']]]
+  ['key_0',['Key',['../structpartensor_1_1I__TnsNode.html#a2476b9f99664f6a31da3eb3df67c98e2',1,'partensor::I_TnsNode::Key()'],['../structpartensor_1_1TnsNode.html#a9a7f804739e8ccec6a3efd305b5d91c5',1,'partensor::TnsNode::Key()'],['../structpartensor_1_1TnsNode_3_010_01_4.html#a9a7f804739e8ccec6a3efd305b5d91c5',1,'partensor::TnsNode&lt; 0 &gt;::Key()']]],
+  ['khatrirao_1',['KhatriRao',['../KhatriRao_8hpp.html#aa519e1fed65019a68fb5840fb86c2289',1,'partensor::v1']]],
+  ['kronecker_2',['Kronecker',['../Kronecker_8hpp.html#adce9839467a79a3cddc11257fd4d0ef8',1,'partensor::v1']]]
 ];

@@ -1,8 +1,10 @@
 var searchData=
 [
-  ['generaterandommatrix',['generateRandomMatrix',['../DataGeneration_8hpp.html#af7ea74e62fe27edb4f79e7cff4330b67',1,'partensor']]],
-  ['generaterandomtensor',['generateRandomTensor',['../DataGeneration_8hpp.html#aa4c09d5f79b909e56506bcd0ccb4905e',1,'partensor']]],
-  ['generatetensor',['generateTensor',['../DataGeneration_8hpp.html#adaa15021ed94fba7a1bba0ea9bfddd6f',1,'partensor::generateTensor(std::size_t const mode, std::array&lt; Matrix, Size &gt; const &amp;factorArray)'],['../DataGeneration_8hpp.html#aaf1cd642bac6ad201734fdce2ba6faa6',1,'partensor::generateTensor(std::array&lt; Tensor&lt; 2 &gt;, _TnsSize &gt; &amp;factorArray)']]],
-  ['glambda',['GLambda',['../NesterovMNLS_8hpp.html#acfd6505c765f80951ffa751fb23405b1',1,'partensor::v1']]],
-  ['gramian',['Gramian',['../structpartensor_1_1I__TnsNode.html#aa1ece46926a78aeea1749c99ea0f9130',1,'partensor::I_TnsNode::Gramian()'],['../structpartensor_1_1TnsNode.html#a118f1a01bea287d65132eca3c002a271',1,'partensor::TnsNode::Gramian()'],['../structpartensor_1_1TnsNode_3_010_01_4.html#a7bf897066747ee8c0f5cfaa5852f9ce4',1,'partensor::TnsNode&lt; 0 &gt;::Gramian()']]]
+  ['endchronohightimer_0',['endChronoHighTimer',['../structpartensor_1_1Timers.html#a7b3e1baa43c034386c66fafe350974ec',1,'partensor::Timers']]],
+  ['endchronosteadytimer_1',['endChronoSteadyTimer',['../structpartensor_1_1Timers.html#a2e7d335b6866b6b2237ab571a2982751',1,'partensor::Timers']]],
+  ['endcputimer_2',['endCpuTimer',['../structpartensor_1_1Timers.html#af508a14d8cb3e3224fe3c23c6556471c',1,'partensor::Timers']]],
+  ['endmpitimer_3',['endMpiTimer',['../structpartensor_1_1Timers.html#ae0235b8752e827e788f524fabd362e27',1,'partensor::Timers']]],
+  ['environment_4',['environment',['../structpartensor_1_1v1_1_1environment.html#a511594bd92ea84620d6d5e939eef55d3',1,'partensor::v1::environment']]],
+  ['error_5',['error',['../TerminationConditions_8hpp.html#aea7a84c2f28fdd0f95bb24d07d0903d7',1,'partensor']]],
+  ['exprnode_6',['ExprNode',['../structpartensor_1_1ExprNode.html#ae8fda7dac3457109eba0ac9a36ed5140',1,'partensor::ExprNode::ExprNode()'],['../structpartensor_1_1ExprNode.html#ad61391a7a722d965f1d9f197402ab02d',1,'partensor::ExprNode::ExprNode(ExprNode&lt; _ParLabelSetSize2, _ParParLabelSetSize, _RootSize2 &gt; *parent_)']]]
 ];

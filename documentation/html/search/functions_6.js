@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['key',['Key',['../structpartensor_1_1I__TnsNode.html#a2476b9f99664f6a31da3eb3df67c98e2',1,'partensor::I_TnsNode::Key()'],['../structpartensor_1_1TnsNode.html#a9a7f804739e8ccec6a3efd305b5d91c5',1,'partensor::TnsNode::Key()'],['../structpartensor_1_1TnsNode_3_010_01_4.html#a9a7f804739e8ccec6a3efd305b5d91c5',1,'partensor::TnsNode&lt; 0 &gt;::Key()']]],
-  ['khatrirao',['KhatriRao',['../KhatriRao_8hpp.html#aa519e1fed65019a68fb5840fb86c2289',1,'partensor::v1']]],
-  ['kronecker',['Kronecker',['../Kronecker_8hpp.html#adce9839467a79a3cddc11257fd4d0ef8',1,'partensor::v1']]]
+  ['i_5ftnsnode_0',['I_TnsNode',['../structpartensor_1_1I__TnsNode.html#ae3f3da8b8efa098770a5a3f2265def2d',1,'partensor::I_TnsNode']]],
+  ['identitytensorgen_1',['IdentityTensorGen',['../TensorOperations_8hpp.html#aed2074c00fe8f0b68c27b2aea418006d',1,'partensor']]],
+  ['initialize_5ffactors_2',['initialize_factors',['../structpartensor_1_1v1_1_1internal_1_1GTC_3_01TnsSize___00_01execution_1_1openmpi__policy_01_4.html#a9c23a9e87d545697ccdb514628599aa2',1,'partensor::v1::internal::GTC&lt; TnsSize_, execution::openmpi_policy &gt;::initialize_factors()'],['../structpartensor_1_1v1_1_1internal_1_1GTC__STOCHASTIC_3_01TnsSize___00_01execution_1_1openmpi__policy_01_4.html#a9c23a9e87d545697ccdb514628599aa2',1,'partensor::v1::internal::GTC_STOCHASTIC&lt; TnsSize_, execution::openmpi_policy &gt;::initialize_factors()']]],
+  ['inplace_3',['inplace',['../ParallelWrapper_8hpp.html#a6f8fd7382ac32a1bf165fe7512e0b504',1,'partensor::v1']]]
 ];

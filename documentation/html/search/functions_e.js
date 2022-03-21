@@ -1,10 +1,11 @@
 var searchData=
 [
-  ['tensortomatrix',['tensorToMatrix',['../TensorOperations_8hpp.html#ae91af598776b126384e060e95ed9a44e',1,'partensor']]],
-  ['tensorx',['TensorX',['../structpartensor_1_1I__TnsNode.html#a108639c85383477640c20f2399473e95',1,'partensor::I_TnsNode::TensorX()'],['../structpartensor_1_1TnsNode.html#a355d9e268db73106bccc0a973a6922e3',1,'partensor::TnsNode::TensorX()'],['../structpartensor_1_1TnsNode_3_010_01_4.html#a355d9e268db73106bccc0a973a6922e3',1,'partensor::TnsNode&lt; 0 &gt;::TensorX()']]],
-  ['tnsdims',['TnsDims',['../structpartensor_1_1I__TnsNode.html#a1b4ff7109797a62003eb61d9b123ff99',1,'partensor::I_TnsNode::TnsDims()'],['../structpartensor_1_1TnsNode_3_010_01_4.html#a4c0ab3ec15334aaa1b7b01c6d59dfb0c',1,'partensor::TnsNode&lt; 0 &gt;::TnsDims()'],['../structpartensor_1_1ExprNode.html#abe34d3c60eb6d6e3ec26c61348b8389f',1,'partensor::ExprNode::TnsDims()']]],
-  ['tnsnode',['TnsNode',['../structpartensor_1_1TnsNode.html#a21b01bf24c089259ddb75eb98f351207',1,'partensor::TnsNode::TnsNode()'],['../structpartensor_1_1TnsNode_3_010_01_4.html#aac86bc53051048f7492ba2c8cc14fe8d',1,'partensor::TnsNode&lt; 0 &gt;::TnsNode()']]],
-  ['treemode_5fn_5fproduct',['TreeMode_N_Product',['../structpartensor_1_1ExprNode.html#ac0365ce9c4c12e3e726b20c8b8ee1f2d',1,'partensor::ExprNode']]],
-  ['ttvs',['TTVs',['../structpartensor_1_1ExprNode.html#af2bc3fcc60b2eb378133c421479d031b',1,'partensor::ExprNode']]],
-  ['ttvs_5futil',['TTVs_util',['../structpartensor_1_1ExprNode.html#a79c9174581224bf7fb1c3dd57153b3da',1,'partensor::ExprNode']]]
+  ['search_5fleaf_0',['search_leaf',['../DimTrees_8hpp.html#abceaa7db62d556b9d8722cc4df1e82e6',1,'partensor']]],
+  ['searchkey_1',['SearchKey',['../structpartensor_1_1I__TnsNode.html#a2adb0150c1bd03a14e1c1fddd1528e29',1,'partensor::I_TnsNode::SearchKey()'],['../structpartensor_1_1TnsNode_3_010_01_4.html#a5ed3447f5f4c174921bc73cf586cbd6b',1,'partensor::TnsNode&lt; 0 &gt;::SearchKey()'],['../structpartensor_1_1ExprNode.html#a247c62ecd8ccec0d6bf2bfaffbce55f8',1,'partensor::ExprNode::SearchKey()']]],
+  ['setoutdated_2',['SetOutdated',['../structpartensor_1_1I__TnsNode.html#afb1cbb24f4103be2533d6bdc946d047c',1,'partensor::I_TnsNode::SetOutdated()'],['../structpartensor_1_1TnsNode.html#a046e293f136b021927d75ea4a1fd943c',1,'partensor::TnsNode::SetOutdated()'],['../structpartensor_1_1TnsNode_3_010_01_4.html#a046e293f136b021927d75ea4a1fd943c',1,'partensor::TnsNode&lt; 0 &gt;::SetOutdated()']]],
+  ['square_5fnorm_3',['square_norm',['../TensorOperations_8hpp.html#aa5e42b4dae41477b7d8e66e055b66b43',1,'partensor']]],
+  ['startchronohightimer_4',['startChronoHighTimer',['../structpartensor_1_1Timers.html#a3b49cb4bbe6151efc86fd40c47f98be7',1,'partensor::Timers']]],
+  ['startchronosteadytimer_5',['startChronoSteadyTimer',['../structpartensor_1_1Timers.html#ae4a92a27d8339a60edb36c765d9743e2',1,'partensor::Timers']]],
+  ['startcputimer_6',['startCpuTimer',['../structpartensor_1_1Timers.html#a1fc004f3c01e5b8f4be6747b716503d4',1,'partensor::Timers']]],
+  ['startmpitimer_7',['startMpiTimer',['../structpartensor_1_1Timers.html#aed92fd23d5acf858c0d362c33d24fc6f',1,'partensor::Timers']]]
 ];

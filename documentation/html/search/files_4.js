@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['matricization_2ehpp',['Matricization.hpp',['../Matricization_8hpp.html',1,'']]],
-  ['mttkrp_2ehpp',['MTTKRP.hpp',['../MTTKRP_8hpp.html',1,'']]]
+  ['khatrirao_2ehpp_0',['KhatriRao.hpp',['../KhatriRao_8hpp.html',1,'']]],
+  ['kronecker_2ehpp_1',['Kronecker.hpp',['../Kronecker_8hpp.html',1,'']]]
 ];
