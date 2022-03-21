@@ -2,6 +2,7 @@ MPICC = /SDKS/CPP_LIBS/mpi/bin/mpiCC
 CC = /usr/local/bin/g++
 #DEBUG = -g
 CXXFLAGS = -c -O3 -I /SDKS/CPP_LIBS/eigen
+
 #LFLAGS = -Wall# $(DEBUG)
 OBJS = ntf_mpi_eigen.o compute_grid_dimensions.o dis_count.o create_grid.o compute_svd.o g_lambda.o get_objective_value.o get_objective_value_accel.o line_search_accel.o normalize.o nesterov_matrix_nnls.o read_data.o read_from_file.o set_info.o update_alpha.o update_A_n_Z_factors.o update_S_factor.o
 DEPS = ntf_functions.h
