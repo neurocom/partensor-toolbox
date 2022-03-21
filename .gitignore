@@ -709,6 +709,11 @@ src/tests/RUN_TESTS.vcxproj.filters
 src/tests/tester.dir/
 src/tests/tester.vcxproj
 src/tests/tester.vcxproj.filters
+Makefile
+src/Makefile
+src/ets/Makefile
+src/nclib/Makefile
+src/tests/Makefile
 src/atm/atm.dir/
 src/atm/atm.vcxproj
 src/atm/atm.vcxproj.filters
